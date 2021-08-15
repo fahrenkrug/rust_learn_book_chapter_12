@@ -143,6 +143,14 @@ fn generate_workout(intensity: u32, random_number: u32) {
     }
 }
 
+
+// Bonus quest: The problem is that the first time we called c.value with 1, the Cacher
+// instance saved Some(1) in self.value. Thereafter, no matter what we pass into the value method,
+// it will always return 1.
+//
+// Try modifying Cacher to hold a hash map rather than a single value. The keys of the hash map
+// will be the arg values that are passed in, and the values of the hash map will be the result
+// of calling the closure on that key
 struct Cacher<T, U, V>
 where T: Fn(U) -> V
 {
@@ -170,39 +178,6 @@ where T: Fn(U) -> V, U: Hash, U: Eq, U: Clone, V: Clone {
                 let v = (self.calculation)(arg.clone());
                 self.values.insert(arg, v.clone());
                 v.clone()
-            }
-        }
-    }
-}
-
-// Bonus quest: The problem is that the first time we called c.value with 1, the Cacher
-// instance saved Some(1) in self.value. Thereafter, no matter what we pass into the value method,
-// it will always return 1.
-//
-// Try modifying Cacher to hold a hash map rather than a single value. The keys of the hash map
-// will be the arg values that are passed in, and the values of the hash map will be the result
-// of calling the closure on that key
-struct HashCacher<T>
-where T: Fn(u32) -> u32 {
-    calculation: T,
-    values: HashMap<u32, u32>,
-}
-
-impl<T> HashCacher<T>
-    where T: Fn(u32) -> u32 {
-    fn new(calculation: T) -> HashCacher<T> {
-        HashCacher {
-            calculation,
-            values: HashMap::new()
-        }
-    }
-    fn value(&mut self, arg: u32) -> u32 {
-        match self.values.get(&arg) {
-            Some(v) => v.clone(),
-            None => {
-                let v = (self.calculation)(arg);
-                self.values.insert(arg, v);
-                v
             }
         }
     }
