@@ -73,7 +73,7 @@ impl Config {
         let query = args[1].clone();
         let filename = args[2].clone();
         let should_use_case_insensitive = match env::var("CASE_INSENSITIVE") {
-            Err(e) => false,
+            Err(_e) => false,
             Ok(string) => string != "0"
         };
         Ok(Config { query, filename, should_use_case_insensitive })
