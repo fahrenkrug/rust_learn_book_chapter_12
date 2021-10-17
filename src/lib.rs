@@ -1,10 +1,14 @@
+mod shoe;
+
 use std::fs;
 use std::error::Error;
 use std::env;
+use std::fs::read_to_string;
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::path::Iter;
 
     #[test]
     fn case_sensitive() {
@@ -26,19 +30,40 @@ Pick three.
 Trust me.";
         assert_eq!(vec!["Rust:", "Trust me."], search_case_insensitive(query, contents))
     }
+
+    #[test]
+    fn iterator_demonstration() {
+        let vec = vec![1,2,3];
+        // mut is necessary because next() changes the internal state.
+        let mut iter = vec.iter();
+
+        assert_eq!(iter.next(), Some(&1));
+        assert_eq!(iter.next(), Some(&2));
+        assert_eq!(iter.next(), Some(&3));
+        assert_eq!(iter.next(), None);
+    }
+
+    #[test]
+    fn iterator_sum() {
+        let vec = vec![1,2,3];
+        let total: u32 = vec.iter().sum();
+        assert_eq!(total, 6);
+    }
+
+    #[test]
+    fn iterator_map() {
+        // Just calling .map without passing this value into a variable would have triggered a warning
+        // because iterators are lazy and only compute when they are really needed to do so.
+        let v1 = vec![1, 2, 3];
+        let v1_iter = v1.iter();
+        let v1_iterated: Vec<u32> = v1_iter.map(|x| x + 1).collect();
+        assert_eq!(v1_iterated, vec![2,3,4]);
+        let total: u32 = v1_iterated.iter().sum();
+        assert_eq!(total, 9);
+    }
 }
 
 pub fn search<'a>(query: &str, contents: &'a str) -> Vec<&'a str> {
-    // Tutorial implementation
-    // let mut results = Vec::new();
-    // for line in contents.lines() {
-    //     if line.contains(query) {
-    //         results.push(line);
-    //     }
-    // }
-    // results
-
-    // My own implementation
     contents.lines().filter(|line| line.contains(query)).collect()
 }
 
@@ -66,16 +91,22 @@ pub struct Config {
 }
 
 impl Config {
-    pub fn new(args: &[String]) -> Result<Config, &str> {
-        if args.len() < 3 {
-            return Err("Not enough arguments passed to application.");
-        }
-        let query = args[1].clone();
-        let filename = args[2].clone();
-        let should_use_case_insensitive = match env::var("CASE_INSENSITIVE") {
-            Err(_e) => false,
-            Ok(string) => string != "0"
+    pub fn new(mut args: env::Args) -> Result<Config, &'static str> {
+        args.next();
+        let query = match args.next() {
+            Some(arg) => arg,
+            None => return Err("Didn't get any query string")
         };
-        Ok(Config { query, filename, should_use_case_insensitive })
+
+        let filename = match args.next() {
+            Some(arg) => arg,
+            None => return Err("Didn't get a file name")
+        };
+        let should_use_case_insensitive = env::var("CASE_SENSITIVE").is_err();
+        Ok(Config {
+            query,
+            filename,
+            should_use_case_insensitive
+        })
     }
 }

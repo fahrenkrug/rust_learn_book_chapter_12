@@ -38,6 +38,8 @@ mod tests {
     //     assert_eq!(v1, 1);
     //     assert_eq!(v2, 2);
     // }
+
+
 }
 
 fn main() {
@@ -47,7 +49,7 @@ fn main() {
 
 fn chapter_12_main() {
     let args: Vec<String> = env::args().collect();
-    let config = Config::new(&args).unwrap_or_else(|error| {
+    let config = Config::new(env::args()).unwrap_or_else(|error| {
         eprintln!("Problem parsing arguments: {}", error);
         process::exit(1);
     });
@@ -59,9 +61,15 @@ fn chapter_12_main() {
 }
 
 fn chapter_13_main() {
+    chapter_13_2();
+}
+
+fn chapter_13_1() {
     let simulated_user_specified_value = 10;
     let simulated_random_number= 7;
     generate_workout(simulated_user_specified_value, simulated_random_number);
+    first_closure_example();
+    second_closure_example();
 }
 
 fn generate_workout(intensity: u32, random_number: u32) {
@@ -163,7 +171,7 @@ where T: Fn(U) -> V
 // that take one parameter of type u32 and return a u32. We might want to cache the results of
 // closures that take a string slice and return usize values, for example. To fix this issue, try
 // introducing more generic parameters to increase the flexibility of the Cacher functionality.
-impl<T, U, V: Clone> Cacher<T, U, V>
+impl<T, U, V> Cacher<T, U, V>
 where T: Fn(U) -> V, U: Hash, U: Eq, U: Clone, V: Clone {
     fn new(calculation: T) -> Cacher<T, U, V> {
         Cacher {
@@ -197,4 +205,42 @@ fn simulated_expensive_calculation(intensity: u32) -> u32 {
     intensity
 }
 
-// https://doc.rust-lang.org/book/ch12-01-accepting-command-line-arguments.html
+fn first_closure_example() {
+    let x = 4;
+    let equal_to_x = |z| z == x;
+    let y = 4;
+    assert!(equal_to_x(y));
+}
+
+// Closures are able to use the variables in the outer scope. The compilers infers the right trait
+// to do so (FnOnce, Fn, FnMut) depending on how the variables of the outer scopes are used inside
+// the closure.
+// The same example (like first_closure_example) will fail with a function. So that's why this fn is
+// commented out.
+/*
+fn non_working_function_comparison() {
+    let x = 4;
+    fn equal_to_x(z: u32) -> bool {
+        x == z
+    }
+    let y = 4;
+    assert!(equal_to_x(y));
+}
+ */
+fn second_closure_example() {
+    // We have to use a vec, because primitives like u32 will be cloned.
+    let x = vec![1,2,3];
+    let equal_to_x = move |z| z == x;
+    // This breaks during the compiler.
+    // println!("Can't use x here: {:?}", x);
+    let y = vec![1,2,3];
+    assert!(equal_to_x(y));
+}
+
+fn chapter_13_2() {
+    let v1 = vec![1,2,3];
+    let v1_iter = v1.iter();
+    for val in v1_iter {
+        println!("Got {:?}", val);
+    }
+}
